@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import './recipe.dart';
+import './recipe/recipe.dart';
+import './calorie/calorie.dart';
 
 class HomePage extends StatelessWidget {
   @override
@@ -7,15 +8,15 @@ class HomePage extends StatelessWidget {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-          appBar: AppBar(
-            title: Text('列表'),
-            centerTitle: true,
-            actions: [],
-          ),
+          // appBar: AppBar(
+          //   title: Text('列表'),
+          //   centerTitle: true,
+          //   actions: [],
+          // ),
           body: TabBarView(
             children: <Widget>[
-              new Recipe(),
-              Text('bbb'),
+              new Recipe(title: '食谱'),
+              new Calorie(title: '热量'),
               Text('ccc'),
             ],
           ),

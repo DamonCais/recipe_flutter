@@ -5,13 +5,31 @@ import './detail.dart';
 Dio dio = new Dio();
 
 class Recipe extends StatefulWidget {
-  Recipe({Key key}) : super(key: key);
+  Recipe({Key key, this.title}) : super(key: key);
+  final title;
   _RecipeState createState() => _RecipeState();
+}
+
+class RecipeTab {
+  String text;
+  RecipeList recipeList;
+  RecipeTab(this.text, this.recipeList);
 }
 
 class _RecipeState extends State<Recipe> with SingleTickerProviderStateMixin {
   TabController _tabController;
-  final List<String> myTabs = ['hot', 'new'];
+  final List<RecipeTab> myTabs = [
+    new RecipeTab('最新推荐', new RecipeList(orderby: 'hot', classid: 0)),
+    new RecipeTab('最新发布', new RecipeList(orderby: 'new', classid: 0)),
+    new RecipeTab('热菜', new RecipeList(orderby: 'tag', classid: 102)),
+    new RecipeTab('凉菜', new RecipeList(orderby: 'tag', classid: 202)),
+    new RecipeTab('汤羹', new RecipeList(orderby: 'tag', classid: 57)),
+    new RecipeTab('主食', new RecipeList(orderby: 'tag', classid: 59)),
+    new RecipeTab('小吃', new RecipeList(orderby: 'tag', classid: 62)),
+    new RecipeTab('西餐', new RecipeList(orderby: 'tag', classid: 160)),
+    new RecipeTab('烘焙', new RecipeList(orderby: 'tag', classid: 60)),
+    new RecipeTab('自制食材', new RecipeList(orderby: 'tag', classid: 69)),
+  ];
   @override
   void initState() {
     // TODO: implement initState
@@ -23,28 +41,35 @@ class _RecipeState extends State<Recipe> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: TabBar(
-          controller: _tabController,
-          tabs: [
-            new Tab(text: 'hot'),
-            new Tab(text: 'new'),
-          ],
-        ),
+        title: Text(widget.title ?? '列表'),
+        centerTitle: true,
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          new RecipeList(type: 'hot'),
-          new RecipeList(type: 'new'),
-        ],
+      body: Scaffold(
+        appBar: AppBar(
+          title: TabBar(
+            controller: _tabController,
+            tabs: myTabs.map((item) {
+              return new Tab(text: item.text);
+            }).toList(),
+            isScrollable:
+                true, //水平滚动的开关，开启后Tab标签可自适应宽度并可横向拉动，关闭后每个Tab自动压缩为总长符合屏幕宽度的等宽，默认关闭
+          ),
+        ),
+        body: TabBarView(
+          controller: _tabController,
+          children: myTabs.map((item) {
+            return item.recipeList;
+          }).toList(),
+        ),
       ),
     );
   }
 }
 
 class RecipeList extends StatefulWidget {
-  RecipeList({Key key, this.type}) : super(key: key);
-  final String type;
+  RecipeList({Key key, this.orderby, this.classid}) : super(key: key);
+  final String orderby;
+  final classid;
   _RecipeListState createState() => _RecipeListState();
 }
 
@@ -55,11 +80,11 @@ class _RecipeListState extends State<RecipeList>
   var recipeList = [];
   ScrollController _scrollCtrl;
   TabController _tabController;
-  getRecipeList(orderby) async {
+  getRecipeList() async {
     if (!mounted) return; //异步处理，防止报错
     print('get ${page}');
     var res = await dio.get(
-        'https://www.jycais.cn/getMoreDiffStateRecipeList?classid=0&orderby=${orderby}&page=${page}');
+        'https://www.jycais.cn/getMoreDiffStateRecipeList?classid=${widget.classid}&orderby=${widget.orderby}&page=${page}');
     // print(res.data);
     setState(() {
       recipeList.addAll(res.data['data']);
@@ -70,7 +95,7 @@ class _RecipeListState extends State<RecipeList>
   void initState() {
     // TODO: implement initState
     super.initState();
-    getRecipeList(widget.type);
+    getRecipeList();
     _scrollCtrl = new ScrollController();
     _scrollCtrl.addListener(() {
       if (_scrollCtrl.position.pixels == _scrollCtrl.position.maxScrollExtent) {
@@ -78,17 +103,17 @@ class _RecipeListState extends State<RecipeList>
           page++;
         });
         // 获取新页面的数据
-        getRecipeList(widget.type);
+        getRecipeList();
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return _recipeList(widget.type);
+    return _recipeList();
   }
 
-  Widget _recipeList(type) {
+  Widget _recipeList() {
     return ListView.builder(
       controller: _scrollCtrl,
       itemCount: recipeList.length,

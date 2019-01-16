@@ -1,6 +1,6 @@
 # flu1
 
-A new Flutter project.
+flutter 开发食谱app
 
 ## Getting Started
 
